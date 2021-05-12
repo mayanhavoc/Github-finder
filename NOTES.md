@@ -30,7 +30,7 @@ IMPORTANT: The JSX - HAS TO HAVE - one parent element. In our case, everything h
 </div>
 ```
 
-If we want to avoid this behavior, we can use -- FRAGMENTS -- <React.Fragment> (this would replace our <div className="App">). It's almost like a "ghost" element (because we avoid wrapping our elements inside a div). 
+If we want to avoid this behavior, we can use -- FRAGMENTS -- <React.Fragment> (this would replace our `<div className="App">`). It's almost like a "ghost" element (because we avoid wrapping our elements inside a div). 
 
 ```Javascript
 class App extends React.Component {
@@ -324,8 +324,152 @@ To create the new `Users` component, we can simply create a new file `Users.js` 
 
 ---
 ##  🧠  Pro-tip 
+If you're using the ES7 React/Redux, etc plugin by dsznajder, you can use the shortcut `rce` to insert a simple component template. 
 
+---
 
+Once we've created our template for our `Users.js` component, we can add a state to it. We can do that just as we did with the `UserItem` state, declaring an object this time it will be an array of users. (We'll hard code users at first and later comment them out as the data will come from an API).
+
+Now we'll loop through our users inside the `render()`. We'll create a `div`, and inside it we'll put an expression (using `{}`).Inside the curly braces we'll put this expression `{this.state.users}` so we can access all of the users. To loop through all the users, we add the `.map()` method at the end. `.map()` is a  
+[High-order function](https://eloquentjavascript.net/05_higher_order.html) that takes in a function. We are going to use a [callback function](https://developer.mozilla.org/en-US/docs/Glossary/Callback_function) that will take in a parameter `user` that represents each one of the users. 
+
+In order to use our `User` component, we need to `import` it in our `App.js` file. We no longer need the `UserItem` component so we can replace it with the `User` component. 
+```Javascript
+// import UserItem from './components/users/UserItem';
+import Users from './components/users/Users';
+```
+We can also replace the `UserItem` tag inside the `<div className='App'>` for a `Users` tag: 
+```Javascript
+<div className='App'>
+    <Navbar />
+    <Users /> 
+    // <UserItem />
+</div>
+```
+
+---
+
+## ⚠️ IMPORTANT 
+Whenever you have a list, each child in the list should have a unique "key" prop. So we'll go to our `Users.js` file and we'll add that key to the element that is being iterated over in our `map` arrow function: 
+```Javascript
+<div>
+    {this.state.users.map(user => (
+        <div key={user.id} {user.login}/>
+    ))}
+</div>
+```
+We'll use `user.id` as our `key` because it's **unique**. 
+
+---
+
+Now, instead of just setting the output to a `div` for each of the users in the `state`, I want to output a `UserItem`, which is the component we've already created. 
+
+To do this, we need to first `import` our `UserItem` component... 
+```Javascript
+import UserItem from './UserItem'
+// UserItem is in the same folder as Users so we don't need the rest of the path. 
+```
+and **replace** the `<div />` with a `<UserItem />` tag.
+```Javascript
+<div>
+    {this.state.users.map(user => (
+        <UserItem key={user.id} user={user}/>
+    ))}
+</div>
+```
+We also got rid of the `{user.login}` after the `key` and replaced it with the _entire_ user. 
+
+---
+💡 REMEMBER: What we are doing here, is looping through the _users in the state_ (i.e. `this.state.users`) and _for each one_ (i.e. `.map()`), the variable `user` is used to represent the WHOLE user object, i.e.: 
+```Javascript
+{
+    id: '1',
+    login: 'mojombo',
+    avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4',
+    html_url: 'https://github.com/mojombo'
+}, 
+```
+What we are doing in passing in this 👆 object as a `prop` to `UserItem` (i.e.`<UserItem key={user.id} user={user}/>`)
+
+---
+
+ALSO...
+We're not done just yet. 
+
+If we save it and see the page, we'll notice that it just shows the same object three different times. The reason for that is that it is in fact outputting `UserItem`, but `UserItem` is still using the `state` we hard-coded, which is just one user. We'll comment it out and use `props` to pass the `UserItem` object into the `User` component. 
+
+The last thing we need to change in `UserItem.js` is that we no longer need to pull the values for `this.user.state` but from `this.props.user`(because in our **User** component we passed in each individual user because we mapped (`.map()`) through each `user` in our **Users** component) so we'll change our `render()` to reflect this and our `UserItem` component looks like this:
+```Javascript
+import React, { Component } from 'react'
+
+class UserItem extends Component {
+    render() {
+        const { login, avatar_url, html_url } = this.props.user;
+        
+        return (
+            <div className="card text-center">
+                <img src={avatar_url} alt="" className="round-img" style={{ width: '60px'}}/>
+                <h3>{login}</h3>
+                <div>
+                    <a href={html_url} className="btn btn-dark btn-sm my-1">More</a>
+                </div>
+            </div>
+        )
+    }
+}
+
+export default UserItem
+```
+
+---
+
+And our `Users.js` component looks like this: 
+```Javascript
+import React, { Component } from 'react'
+import UserItem from './UserItem'
+
+class Users extends Component {
+    state = {
+        users: [
+            {
+                id: '1',
+                login: 'mojombo',
+                avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4',
+                html_url: 'https://github.com/mojombo'
+            }, 
+            {
+                id: '2',
+                login: "defunkt",
+                avatar_url: 'https://avatars.githubusercontent.com/u/2?v=4',
+                html_url: "https://github.com/defunkt"
+            },
+            {
+                id: '3',
+                login: "pjhyett",
+                avatar_url: 'https://avatars.githubusercontent.com/u/3?v=4',
+                html_url: "https://github.com/pjhyett",
+            }
+        ]
+    }
+    render() {
+        return (
+            <div style={userStyle}>
+                {this.state.users.map(user => (
+                    <UserItem key={user.id} user={user}/>
+                ))}
+            </div>
+        )
+    }
+}
+
+const userStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridGap: '1rem'
+}
+
+export default Users
+```
 ---
 
 
