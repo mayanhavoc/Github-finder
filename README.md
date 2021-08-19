@@ -1,4 +1,4 @@
-# App.js
+# Notes on building Github finder - App.js
 
 ## JSON & Fragments
 
